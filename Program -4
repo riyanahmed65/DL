@@ -1,0 +1,80 @@
+Implement bagging based Ensemble Deep CNN model for automated Lane
+
+Detection and Assistance System for self-Driven cars
+
+from sklearn.model_selection import train_test_split
+
+from tensorflow.keras.models import Sequential
+
+from tensorflow.keras.layers import Conv2D, Flatten, Dense
+
+# Load and preprocess the lane detection dataset
+
+# Split the dataset into train and validation sets
+
+x_train, x_val, y_train, y_val = train_test_split(images, labels, test_size=0.2,
+
+random_state=42)
+
+num_base_models = 5
+
+ensemble_models = []
+
+for i in range(num_base_models):
+
+# Create a base CNN model
+
+base_model = Sequential([
+
+Conv2D(32, (3, 3), activation='relu', input_shape=(image_height, image_width,
+
+num_channels)),
+
+# Add more convolutional layers and flatten
+
+Flatten(),
+
+Dense(128, activation='relu'),
+
+Dense(num_classes, activation='softmax') # Adjust for lane markings classes
+
+])
+
+# Compile the base model
+
+base_model.compile(optimizer='adam', loss='categorical_crossentropy',
+
+metrics=['accuracy'])
+
+# Train the base model on a bootstrap sample
+
+sampled_indices = np.random.choice(len(x_train), size=len(x_train), replace=True)
+
+base_model.fit(x_train[sampled_indices], y_train[sampled_indices], epochs=num_epochs,
+
+batch_size=batch_size)
+
+# Store the trained base model in the ensemble
+ensemble_models.append(base_model)
+
+# Aggregate predictions from the ensemble
+
+ensemble_predictions = []
+
+for model in ensemble_models:
+
+predictions = model.predict(x_val)
+
+ensemble_predictions.append(predictions)
+
+# Aggregate the ensemble predictions (e.g., averaging)
+
+aggregated_predictions = np.mean(ensemble_predictions, axis=0)
+
+# Lane assistance logic
+
+# Evaluate the ensemble on the validation set
+
+ensemble_loss, ensemble_accuracy = ensemble_models[0].evaluate(x_val, y_val)
+
+print(f"Ensemble Accuracy: {ensemble_accuracy:.4f}")
